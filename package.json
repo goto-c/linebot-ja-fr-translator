@@ -1,0 +1,16 @@
+{
+  "name": "linebot-ja-fr-translator",
+  "version": "1.0.0",
+  "description": "LINE bot for Japanese-French translation using Claude API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.55.0",
+    "@line/bot-sdk": "^9.4.0",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2"
+  }
+}
