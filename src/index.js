@@ -27,9 +27,34 @@ app.post(
   }
 );
 
+/**
+ * Returns the source ID (groupId, roomId, or userId) from the event.
+ */
+function getSourceId(event) {
+  const src = event.source;
+  return src.groupId ?? src.roomId ?? src.userId;
+}
+
+/**
+ * Checks whether the event source is in the allowlist.
+ * If ALLOWED_IDS is empty, all sources are permitted.
+ */
+function isAllowed(event) {
+  const raw = process.env.ALLOWED_IDS ?? "";
+  const allowlist = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (allowlist.length === 0) return true;
+  return allowlist.includes(getSourceId(event));
+}
+
 async function handleEvent(event) {
   // Only handle text messages
   if (event.type !== "message" || event.message.type !== "text") return;
+
+  // Restrict to allowed group/user IDs
+  if (!isAllowed(event)) {
+    console.log(`Ignored event from: ${getSourceId(event)}`);
+    return;
+  }
 
   const text = event.message.text.trim();
   if (!text) return;
