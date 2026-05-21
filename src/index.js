@@ -50,9 +50,14 @@ async function handleEvent(event) {
   // Only handle text messages
   if (event.type !== "message" || event.message.type !== "text") return;
 
+  const sourceId = getSourceId(event);
+  const sourceType = event.source.type;   // "group" | "room" | "user"
+  const userId = event.source.userId ?? "unknown";
+  const timestamp = new Date(event.timestamp).toISOString();
+
   // Restrict to allowed group/user IDs
   if (!isAllowed(event)) {
-    console.log(`Ignored event from: ${getSourceId(event)}`);
+    console.log(`[${timestamp}] IGNORED | ${sourceType}=${sourceId} user=${userId}`);
     return;
   }
 
@@ -62,13 +67,18 @@ async function handleEvent(event) {
   const lang = detectLanguage(text);
 
   // Ignore messages that are neither Japanese nor French
-  if (lang === "unknown") return;
+  if (lang === "unknown") {
+    console.log(`[${timestamp}] SKIP (unknown lang) | ${sourceType}=${sourceId} user=${userId} text="${text}"`);
+    return;
+  }
+
+  console.log(`[${timestamp}] RECEIVED | ${sourceType}=${sourceId} user=${userId} lang=${lang} text="${text}"`);
 
   let translated;
   try {
     translated = await translate(text, lang);
   } catch (err) {
-    console.error("Translation error:", err);
+    console.error(`[${timestamp}] ERROR | translation failed:`, err.message);
     translated = "翻訳中にエラーが発生しました / Une erreur est survenue lors de la traduction.";
   }
 
@@ -79,6 +89,8 @@ async function handleEvent(event) {
     replyToken,
     messages: [{ type: "text", text: translated }],
   });
+
+  console.log(`[${timestamp}] REPLIED | ${sourceType}=${sourceId} translated="${translated}"`);
 }
 
 // Health check
